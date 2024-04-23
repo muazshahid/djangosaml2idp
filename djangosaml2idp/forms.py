@@ -22,7 +22,7 @@ class ServiceProviderAdminForm(forms.ModelForm):
     class Meta:
         model = ServiceProvider
         # Keep in sync with readonly_fields on admin class.
-        exclude = ('dt_created', 'dt_updated', 'resulting_config', 'metadata_expiration_dt')
+        exclude = ('dt_created', 'dt_updated', 'resulting_config', 'metadata_expiration_dt' , '_processor')
         widgets = {
             '_encrypt_saml_responses': forms.Select(choices=boolean_form_select_choices),
             '_sign_response': forms.Select(choices=boolean_form_select_choices),

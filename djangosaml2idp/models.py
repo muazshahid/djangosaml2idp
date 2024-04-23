@@ -58,13 +58,13 @@ class ServiceProvider(models.Model):
 
     # Identification
     entity_id = models.CharField(verbose_name='Entity ID', max_length=255, unique=True)
-    pretty_name = models.CharField(verbose_name='Pretty Name', blank=True, max_length=255, help_text='For display purposes, can be empty')
+    pretty_name = models.CharField(verbose_name='Name', blank=True, max_length=255, help_text='Service provider/application name')
     description = models.TextField(verbose_name='Description', blank=True)
 
     # Metadata
     metadata_expiration_dt = models.DateTimeField(verbose_name='Metadata valid until')
-    remote_metadata_url = models.CharField(verbose_name='Remote metadata URL', max_length=512, blank=True, help_text='If set, metadata will be fetched upon saving into the local metadata xml field, and automatically be refreshed after the expiration timestamp.')
-    local_metadata = models.TextField(verbose_name='Local Metadata XML', blank=True, help_text='XML containing the metadata')
+    remote_metadata_url = models.CharField(verbose_name='Remote Metadata URL', max_length=512, blank=True, help_text='If set, Metadata will be fetched upon saving into the local Metadata XML field, and automatically be refreshed after the expiration timestamp.')
+    local_metadata = models.TextField(verbose_name='Local Metadata XML', blank=True, help_text='XML containing the Metadata')
 
     @classmethod
     def from_db(cls, db, field_names, values):
@@ -143,19 +143,19 @@ class ServiceProvider(models.Model):
         raise Exception('Uncaught case of refresh_metadata')
 
     # Configuration
-    active = models.BooleanField(verbose_name='Active', default=True)
+    active = models.BooleanField(verbose_name='Active', default=True, help_text="If not active, this SP will not be used for SAML authentication.")
     _processor = models.CharField(verbose_name='Processor', max_length=256, help_text='Import string for the (access) Processor to use.', default=get_default_processor)
-    _attribute_mapping = models.TextField(verbose_name='Attribute mapping', default=get_default_attribute_mapping, help_text='dict with the mapping from django attributes to saml attributes in the identity.')
+    _attribute_mapping = models.TextField(verbose_name='Attribute mapping', default=get_default_attribute_mapping, help_text='Dictionary with the mapping from IAM attributes to SAML SP attributes in the identity.')
 
-    _nameid_field = models.CharField(verbose_name='NameID Field', blank=True, max_length=64, help_text='Attribute on the user to use as identifier during the NameID construction. Can be a callable. If not set, this will default to settings.SAML_IDP_DJANGO_USERNAME_FIELD; if that is not set, it will use the `USERNAME_FIELD` attribute on the active user model.')
+    _nameid_field = models.CharField(verbose_name='NameID field', blank=True, max_length=64, help_text='Attribute on the user to use as identifier during the NameID construction. Can be a callable. If not set, this will be the username of the User.')
 
-    _sign_response = models.BooleanField(verbose_name='Sign response', blank=True, null=True, help_text='If not set, default to the "sign_response" setting of the IDP. If that one is not set, default to False.')
-    _sign_assertion = models.BooleanField(verbose_name='Sign assertion', blank=True, null=True, help_text='If not set, default to the "sign_assertion" setting of the IDP. If that one is not set, default to False.')
+    _sign_response = models.BooleanField(verbose_name='Sign response', blank=True, null=True, help_text='If not set, default to the "sign_response" setting of the IAM IdP. If that one is not set, default to False.')
+    _sign_assertion = models.BooleanField(verbose_name='Sign assertion', blank=True, null=True, help_text='If not set, default to the "sign_assertion" setting of the IAM IdP. If that one is not set, default to False.')
 
-    _signing_algorithm = models.CharField(verbose_name='Signing algorithm', blank=True, null=True, max_length=256, choices=[(constant, pretty) for (pretty, constant) in xmldsig.SIG_ALLOWED_ALG], help_text='If not set, use settings.SAML_AUTHN_SIGN_ALG.')
-    _digest_algorithm = models.CharField(verbose_name='Digest algorithm', blank=True, null=True, max_length=256, choices=[(constant, pretty) for (pretty, constant) in xmldsig.DIGEST_ALLOWED_ALG], help_text='If not set, default to settings.SAML_AUTHN_DIGEST_ALG.')
+    _signing_algorithm = models.CharField(verbose_name='Signing algorithm', blank=True, null=True, max_length=256, choices=[(constant, pretty) for (pretty, constant) in xmldsig.SIG_ALLOWED_ALG], help_text='If not set, default IAM IdP settings will be used.')
+    _digest_algorithm = models.CharField(verbose_name='Digest algorithm', blank=True, null=True, max_length=256, choices=[(constant, pretty) for (pretty, constant) in xmldsig.DIGEST_ALLOWED_ALG], help_text='If not set, default IAM IdP settings will be used.')
 
-    _encrypt_saml_responses = models.BooleanField(verbose_name='Encrypt SAML Response', null=True, help_text='If not set, default to settings.SAML_ENCRYPT_AUTHN_RESPONSE. If that one is not set, default to False.')
+    _encrypt_saml_responses = models.BooleanField(verbose_name='Encrypt SAML response', null=True, help_text='If not set, default IAM IdP settings will be used. If that one is not set, default to False.')
 
     class Meta:
         verbose_name = "Service Provider"
@@ -282,7 +282,7 @@ class ServiceProvider(models.Model):
 class PersistentId(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sp = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE)
-    persistent_id = models.UUIDField("User Persistent Id for this SP", default=uuid.uuid4)
+    persistent_id = models.UUIDField("User Persistent ID for this SP", default=uuid.uuid4)
     created = models.DateTimeField(default=now)
 
     class Meta:
